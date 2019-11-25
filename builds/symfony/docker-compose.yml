@@ -1,0 +1,15 @@
+version: '3.2'
+
+services:
+    apache:
+        build: ./images/php
+        ports:
+            - 80:80
+        volumes:
+            - /mnt/turp/data/TurpData/Development/Symfony:/var/www/html/
+    elastic:
+        image: elasticsearch:7.2.0
+        ports:
+            - 9200:9200
+        environment:
+            - discovery.type=single-node

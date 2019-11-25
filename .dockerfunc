@@ -1,0 +1,389 @@
+
+##### Development functions
+
+webbackup() {
+    docker run \
+        -it --rm \
+        -v /mnt/turp/.appdata/.webbackup/web_backups.cfg:/app/config/web_backups.cfg \
+        -v /mnt/turp/data/Webbackups/content:/app/backups \
+        -v /mnt/turp/data/Webbackups/pem:/app/pem \
+        sturple/webbackup bash
+}
+
+
+filezilla () {
+    docker stop filezilla
+    docker rm filezilla
+    docker run \
+        -d \
+        --name=filezilla \
+        -p 5800:5800 \
+        -e VIRTUAL_HOST=filezilla.test \
+        -v /mnt/turp/.appdata/.filezilla:/config:rw \
+        -v /mnt/turp/data:/storage:rw \
+        jlesage/filezilla
+}
+
+
+
+vscode() {
+    docker stop vscode
+    docker rm vscode
+    docker run \
+        --name vscode
+        -v "${TURP_APP_DATA}/.local/share/code-server:/home/coder/.local/share/code-server" \
+        -v "${TURP_DATA}:/home/coder/project" \
+        -e DEFAULT_HOST=local.test \
+        codercom/code-server:v2
+}
+
+
+
+
+revproxy() {
+    #@todo requires a real heath check.
+    docker run -d \
+        --name revproxy \
+        -p ${HOST}:80:80 \
+        -p ${HOST}:443:443 \
+        -v /var/run/docker.sock:/tmp/docker.sock:ro  \
+        -v "${TURP_APP_DATA}/.revproxy/client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf" \
+        -e DEFAULT_HOST=local.test \
+        -e VIRTUAL_PROTO=https \
+        -e VIRTUAL_PORT=443 \
+        --restart always \
+        --health-cmd="exit 0" \
+        jwilder/nginx-proxy
+}
+
+#### Development
+
+html_server () {
+    docker stop htmlserver
+    docker rm htmlserver
+    docker run \
+    -d \
+    --name=htmlserver \
+    --restart=always \
+    -e VIRTUAL_HOST="htmlserver.test" \
+    -v "${TURP_DATA}/htmlserver:/var/www/html" \
+    --link mysql57:mysql \
+    webgriffe/php-apache-base
+}
+
+wordpress_multisite() {
+  # setup wordpress multisite
+  #mysql
+  #phpadmin
+  local SITE_NAME="${1:-wordpress_multisite}"
+  echo "Creating docker contaner: ${SITE_NAME}"
+  docker run \
+  --name ${SITE_NAME} \
+  -v ${TURP_DATA}/Wordpress/${SITE_NAME}}/wp-content:/var/www/html/wp-content \
+  -e WORDPRESS_DB_HOST="mysql57:3306" \
+  -e WORDPRESS_DB_PASSWORD="r@nD0m7772" \
+  -e WORDPRESS_MULTISITE="true" \
+  -e WORDPRESS_DB_NAME="${SITE_NAME}" \
+  -e WORDPRESS_DEBUG="true" \
+  -e WP_GROUP=$(id -g) \
+  -e VIRTUAL_HOST="${SITE_NAME:-wordpress}.test" \
+  --link mysql57:mysql \
+  --restart=unless-stopped \
+  -u :$(id -g) \
+  -d \
+  sturple/wordpress
+  echo "Visit http://${SITE_NAME}.test to view this site."
+  echo "Dabtabase: mysql57:${SITE_NAME}"
+  echo -e "\033[93m***** Run dockerUpdateHost.sh to update host file\033[32m"
+}
+
+
+wordpress() {
+    docker run -d \
+        --name wordpress \
+        -v "${TURP_DATA}/Wordpress/${SITE_NAME}/wp-content:/var/www/html/wp-content" \
+        -v "${TURP_DATA}/Wordpress/${SITE_NAME}/wp-admin:/var/www/html/wp-admin" \
+        -e WORDPRESS_DB_HOST="mysql57:3306" \
+        -e WORDPRESS_DB_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        -e WORDPRESS_MULTISITE="true" \
+        -e WORDPRESS_DB_NAME="${SITE_NAME}" \
+        -e WORDPRESS_DEBUG="true" \
+        -e WORDPRESS_USER="${WORDPRESS_USER}" \
+        -e WORDPRESS_PASSWORD="${WORDPRESS_PASSWORD}" \
+        -e WP_GROUP=$(id -g) \
+        -e VIRTUAL_HOST="${URL_WORDPRESS}" \
+        --link mysql57:mysql \
+        --link mailcatcher \
+        -e SMTP_HOST=mailcatcher \
+        --restart=unless-stopped \
+        --health-cmd="curl --fail http://localhost/wp-admin/ || exit 1" \
+        sturple/wordpress
+}
+
+fgms_wordpress() {
+    SITE_NAME=$1
+    docker stop fgms_${SITE_NAME}
+    docker rm fgms_${SITE_NAME}
+    docker run -d \
+        --name fgms_${SITE_NAME} \
+        -v "${TURP_DATA}/Wordpress/fgms/${SITE_NAME}:/var/www/html/" \
+        -e WORDPRESS_DB_HOST="mysql57:3306" \
+        -e WORDPRESS_DB_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        -e WORDPRESS_MULTISITE="false" \
+        -e WORDPRESS_DB_NAME="${SITE_NAME}" \
+        -e WORDPRESS_DEBUG="true" \
+        -e WORDPRESS_USER="admin" \
+        -e WORDPRESS_PASSWORD="password" \
+        -e WP_GROUP=$(id -g) \
+        -e VIRTUAL_HOST="${SITE_NAME}.test" \
+        --link mysql57:mysql \
+        --link mailcatcher \
+        -e SMTP_HOST=mailcatcher \
+        --restart=unless-stopped \
+        --health-cmd="curl --fail http://localhost/wp-admin/ || exit 1" \
+        sturple/wordpress
+}
+
+
+webserver_cms() {
+  docker run -d \
+    --name webserver_cms \
+    -e VIRTUAL_HOST="${URL_CMS}" \
+    -v "${TURP_DATA}/Symfony/cms:/var/www/html/" \
+    --link mysql57:mysql \
+    --health-cmd="curl --fail http://localhost/public || exit 1" \
+    sturple/webserver 
+}
+
+webserver_revolu() {
+  docker run -d \
+    --name webserver_revolu \
+    -e VIRTUAL_HOST="${URL_REVOLU}" \
+    -v "${TURP_DATA}/Symfony/revolu:/var/www/html/" \
+    --health-cmd="curl --fail http://localhost/public || exit 1" \
+    --link mysql57:mysql \
+    sturple/webserver 
+}
+
+webserver_ez() {
+  docker run -d \
+    --name webserver_ez \
+    -e VIRTUAL_HOST="${URL_EZ}" \
+    -v "${TURP_DATA}/Symfony/ez:/var/www/html/" \
+    --health-cmd="curl --fail http://localhost/web/app.php || exit 1" \
+    --link mysql57:mysql \
+    sturple/webserver 
+}
+
+elastic() {
+  docker run -d \
+    --name elastic \
+    -p ${HOST}:9200:9200 \
+    --restart always \
+    -e discovery.type=single-node \
+    -e VIRTUAL_HOST="${URL_ELASTIC}" \
+    --health-cmd="exit 0" \
+    elasticsearch:7.2.0
+}
+   
+phpmyadmin() {
+    docker run -d\
+        --name phpmyadmin \
+        -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        -e PMA_HOST="mysql57" \
+        -e VIRTUAL_HOST="${URL_PHPMYADMIN}" \
+        --link mysql57:mysql \
+        --restart always \
+        --health-cmd="exit 0" \
+        phpmyadmin/phpmyadmin
+}
+
+mailcatcher() {
+    #@todo requires a real heath check.
+    docker run -d \
+        --name mailcatcher \
+        -e VIRTUAL_HOST="${URL_MAILCATCHER}" \
+        --health-cmd="exit 0" \
+        --restart=unless-stopped \
+        tophfr/mailcatcher
+}
+
+
+mysql57() {
+    docker run -d \
+        --name mysql57 \
+        -v "${TURP_APP_DATA}/.mysql:/var/lib/mysql" \
+        -e MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        --restart always \
+        --health-cmd="mysqladmin ping -h localhost" \
+        mysql:5.7
+}
+
+mysql8() {
+    docker run \
+        --name mysql8 \
+        -v "${TURP_APP_DATA}/.mysql8:/var/lib/mysql" \
+        -e MYSQL_ROOT_PASSWORD="r@nD0m7772" \
+        --restart always \
+        -d \
+        --health-cmd="mysqladmin ping -h localhost" \
+        mysql:8.0  \
+        --default-authentication-plugin=mysql_native_password  \
+        --collation-server=utf8mb4_general_ci
+
+}
+   
+#### NOT USED
+
+gitlab() {
+    docker run --detach \
+    	--hostname gitlab.test \
+    	--publish 22:22 \
+    	--name gitlab \
+    	--restart always \
+    	--volume "${TURP_APP_DATA}/.gitlab:/etc/gitlab" \
+    	--volume "${TURP_LOGS}/gitlab:/var/log/gitlab" \
+    	--volume "${TURP_DATA}/git/data:/var/opt/gitlab" \
+        --health-cmd="exit 0" \
+        -e VIRTUAL_HOST="gitlab.test" \
+    	gitlab/gitlab-ce:latest
+}
+
+squid() {
+    docker stop squid
+    docker rm squid
+    docker run --name squid -d --restart=always \
+      --publish 3128:3128 \
+      --volume /srv/docker/squid/cache:/var/spool/squid \
+      --volume /mnt/turp/.appdata/.squid:/etc/squid \
+      sameersbn/squid:3.5.27
+}
+
+squid2 () {
+    docker stop squid
+    docker rm squid
+    docker run --name squid -d --restart=always \
+    --publish 3128:3128 \
+    sameersbn/squid:3.5.27
+}
+
+
+nginx_wordpress() {
+    docker stop nginx_wp
+    docker rm nginx_wp
+    docker run -d \
+    --name nginx_wp \
+    -e VIRTUAL_HOST="nginx.test" \
+    --link mysql57:mysql \
+    --restart=unless-stopped \
+    sturple/wordpress-br-nginx
+}
+
+sshf_mac () {
+    sshfs  sturple@192.168.0.13:/Users/sturple/Development /mnt/mac
+}
+
+_composer() {
+    docker run \
+        --rm \
+        -u $(id -u):$(id -g) \
+        -v $(pwd):/app \
+        -v ${HOME}/appdata/.composer:/${COMPOSER_HOME}/cache \
+        composer/composer \
+        $@
+ }
+
+
+
+chromium_build() {
+    CHROMIUM_SRC="/mnt/turp/data/TurpData/Development/chromium_src"
+    docker create -v $CHROMIUM_SRC:/src --name chromium_src sturple/chromium-builder /bin/true
+    docker run \
+        --rm \
+        -it \
+        --volumes-from=chromium_src  \
+        sturple/chromium-builder
+}
+
+magicmirror() {
+    docker stop magic_mirror
+    docker rm magic_mirror
+    docker run  -d \
+        -p 8080:8080 \
+        --restart always \
+        --volume ~/magic_mirror/config:/opt/magic_mirror/config \
+        --volume ~/magic_mirror/modules:/opt/magic_mirror/modules \
+        --name magic_mirror \
+        sturple/magic_mirror
+}
+
+
+docker_registry_start() {
+    docker stop docker_registry
+    docker rm docker_registry
+    docker run \
+        -d \
+        -p 5000:5000 \
+        --restart=always \
+        --name docker_registry \
+        -v /mnt/turp/data/DockerRegistry/:/var/lib/registry \
+        registry:2
+}
+
+jekyll() {
+    docker run \
+        --rm \
+        -p 4000:4000 \
+        --volume="$PWD:/srv/jekyll" \
+        -it jekyll/jekyll:3.8 \
+        jekyll $@
+}
+
+
+_dropbox () {
+    docker stop dropbox
+    docker rm dropbox
+    docker run \
+        -d \
+        --restart=always \
+        --name dropbox \
+        -v /mnt/turp/data/Dropbox:/dbox/Dropbox \
+        -v /mnt/turp/.appdata/.dropbox:/dbox/.dropbox \
+        -e DBOX_UID=$(id -u) \
+        -e DBOX_GID=$(id -g) \
+        -e DBOX_SKIP_UPDATE=True \
+        --privileged \
+        sturple/dropbox
+}
+
+
+_yarn() {
+  docker run \
+  --rm \
+  -u "node" \
+  -w "/home/node/app" \
+  -v "$(pwd):/home/node/app" \
+  node yarn \
+  $@
+}
+_node() {
+  docker run \
+  --rm \
+  -u "node" \
+  -w "/home/node/app" \
+  -v "$(pwd):/home/node/app" \
+  node node \
+  $@
+}
+
+_npm() {
+  docker run \
+  --rm \
+  -u "node" \
+  -w "/home/node/app" \
+  -v "$(pwd):/home/node/app" \
+  node npm \
+  $@
+}
+
+. "./.env"

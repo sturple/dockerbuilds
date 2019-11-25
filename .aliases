@@ -1,0 +1,6 @@
+alias ls="ls -la --color=auto"
+alias mousespeed="xinput set-float-prop 8 'Device Accel Constant Deceleration' 5;"
+alias godoc="cd /mnt/turp/data/Docker-Utils/containerize && echo $(pwd)"
+alias gowp="cd /mnt/turp/data/TurpData/Development/Wordpress/turp/wp-content && echo $(pwd)"
+alias godata="cd /mnt/turp/data && echo $(pwd)"
+alias goupdate="source ~/.profile"

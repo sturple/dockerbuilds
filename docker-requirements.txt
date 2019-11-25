@@ -1,0 +1,11 @@
+program
+- *filezilla -done
+- *atom - done
+- wordpress -done
+- database -done
+- file server
+- image manager
+- *dropbox - done
+- pcloud
+- libre office
+- *skype

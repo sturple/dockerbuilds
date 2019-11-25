@@ -1,0 +1,45 @@
+version: "3.2"
+
+services:
+  revproxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - "${TURP_APP_DATA}/.revproxy/client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf"
+    environment:
+      - DEFAULT_HOST=local.test
+      - VIRTUAL_PROTO=https
+      - VIRTUAL_PORT=443
+    healthcheck:
+      test: ["CMD", "exit", "0"]
+    networks:
+      - turple_network
+
+  vscode:
+    build: ./builds/vscode
+    restart: always
+    volumes:
+      - "vcodeData:/home/coder"
+      - "${TURP_DATA_CODE}:/home/coder/project"
+    ports:
+      - 8080:8080
+    environment:
+      - DEFAULT_HOST=vscode.test
+
+  samba:
+    image: dperson/samba
+    ports:
+      - 139:139
+      - 445:445
+    volumes:
+      - "${TURP_DATA}:/mount"
+
+networks:
+  turple_network:
+    driver: bridge
+volumes:
+  vcodeData:
