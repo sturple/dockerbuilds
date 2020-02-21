@@ -6,7 +6,6 @@ services:
     ports:
       - 80:80
       - 443:443
-    restart: always
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - "${TURP_APP_DATA}/.revproxy/client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf"
@@ -19,27 +18,25 @@ services:
     networks:
       - turple_network
 
-  vscode:
+  vscode_shawn:
     build: ./builds/vscode
     restart: always
     volumes:
-      - "vcodeData:/home/coder"
-      - "${TURP_DATA_CODE}:/home/coder/project"
+      - "/mnt/turp/coder/shawn:/home/coder"
+      - "${TURP_DATA_CODE}/code/shawn:/home/coder/project"
     ports:
       - 8080:8080
-    environment:
-      - DEFAULT_HOST=vscode.test
 
-  samba:
-    image: dperson/samba
-    ports:
-      - 139:139
-      - 445:445
+  vscode_leanne:
+    build: ./builds/vscode
+    restart: always
     volumes:
-      - "${TURP_DATA}:/mount"
+      - "/mnt/turp/coder/leanne:/home/coder"
+      - "${TURP_DATA_CODE}/code/leanne:/home/coder/project"
+    ports:
+      - 8082:8080
+      - 8083:8081
 
 networks:
   turple_network:
     driver: bridge
-volumes:
-  vcodeData:

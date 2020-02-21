@@ -26,16 +26,29 @@ filezilla () {
 
 
 
-vscode() {
-    docker stop vscode
-    docker rm vscode
+vscode_shawn() {
+    docker stop vscode_shawn
+    docker rm vscode_shawn
     docker run \
-        --name vscode
-        -v "${TURP_APP_DATA}/.local/share/code-server:/home/coder/.local/share/code-server" \
+        --name vscode_shawn \
+        --port 8080:8080 \
+        -v "${TURP_APP_DATA}/.local/share/code-server/shawn:/home/coder/.local/share/code-server" \
         -v "${TURP_DATA}:/home/coder/project" \
-        -e DEFAULT_HOST=local.test \
         codercom/code-server:v2
 }
+
+vscode_leanne() {
+    docker stop vscode_leanne
+    docker rm vscode_leanne
+    docker run \
+        --name vscode_leanne \
+        --port 8082:8080 \
+        -v "${TURP_APP_DATA}/.local/share/code-server/leanne:/home/coder/.local/share/code-server" \
+        -v "${TURP_DATA}:/home/coder/project" \
+        codercom/code-server:v2   
+}
+
+
 
 
 
