@@ -7,3 +7,14 @@ alias goupdate="source ~/.profile"
 
 PATH="$PATH:~/.local/bin"
 
+
+cli_help() {
+    helptext="$(cat <<EOF
+    
+
+    
+EOF
+    )"
+    echo "$helptext"
+}
+

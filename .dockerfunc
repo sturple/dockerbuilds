@@ -4,9 +4,9 @@
 webbackup() {
     docker run \
         -it --rm \
-        -v /mnt/turp/.appdata/.webbackup/web_backups.cfg:/app/config/web_backups.cfg \
-        -v /mnt/turp/data/Webbackups/content:/app/backups \
-        -v /mnt/turp/data/Webbackups/pem:/app/pem \
+        -v /mnt/turp/Turple/FGMS/web_config/web_backups.cfg:/app/config/web_backups.cfg \
+        -v /mnt/usb_disk1/webbackups:/app/backups \
+        -v /mnt/turp/Turple/FGMS/pems:/app/pem \
         sturple/webbackup bash
 }
 
