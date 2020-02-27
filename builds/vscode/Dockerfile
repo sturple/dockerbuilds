@@ -11,5 +11,6 @@ RUN set -ex; \
 #    --filename=composer \
 #    --install-dir=/usr/local/bin; 
 
+USER 1000
 
 ENTRYPOINT ["dumb-init", "code-server", "--host", "0.0.0.0", "--auth", "none" ]
