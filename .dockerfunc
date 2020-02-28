@@ -4,10 +4,11 @@
 webbackup() {
     docker run \
         -it --rm \
+        --name webbackup \
         -v /mnt/turp/Turple/FGMS/web_config/web_backups.cfg:/app/config/web_backups.cfg \
         -v /mnt/usb_disk1/webbackups:/app/backups \
         -v /mnt/turp/Turple/FGMS/pems:/app/pem \
-        sturple/webbackup bash
+        sturple/webbackup
 }
 
 

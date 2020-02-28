@@ -11,6 +11,7 @@ echo>&2 'Setting permisions.'
 chmod +x /app/webbackup/webbackup/webbackup.py
 pip3 install -e pycloud 1>/dev/null
 cd /app/webbackup/webbackup
+echo $(cat /app/config/web_backups.cfg)
 python3 webbackup.py --config /app/config/web_backups.cfg
 echo >&2 'Finsihed'
 exec "$@"

@@ -6,7 +6,7 @@ alias godata="cd /mnt/turp/data && echo $(pwd)"
 alias goupdate="source ~/.profile"
 
 PATH="$PATH:~/.local/bin"
-
+source ./.dockerfunc
 
 cli_help() {
     helptext="$(cat <<EOF
