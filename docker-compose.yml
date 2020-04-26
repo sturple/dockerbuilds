@@ -20,7 +20,7 @@ services:
       - turple_network
 
   vscode_shawn:
-    build: ./builds/vscode
+    image: sturple/coder
     restart: always
     volumes:
       - "/mnt/turp/coder/shawn:/home/coder"
@@ -28,15 +28,39 @@ services:
     ports:
       - 8080:8080
 
+  vscode_brandon:
+    image: sturple/coder
+    restart: always
+    volumes:
+      - "/mnt/turp/coder/brandon:/home/coder"
+      - "${TURP_DATA_CODE}/code/brandon:/home/coder/project"
+    ports:
+      - 8021:8080
+
   vscode_leanne:
-    build: ./builds/vscode
+    image: sturple/coder
     restart: always
     volumes:
       - "/mnt/turp/coder/leanne:/home/coder"
       - "${TURP_DATA_CODE}/code/leanne:/home/coder/project"
     ports:
       - 8082:8080
-      - 8083:8081
+  samba:
+    image: dperson/samba
+    restart: unless-stopped
+    environment:
+      TZ: 'Canada/Pacific'
+    ports:
+      - "137:137/udp"
+      - "138:138/udp"
+      - "139:139/tcp"
+      - "445:445/tcp"
+    volumes:
+      - "/mnt/turp/Turple/Family:/mount/Family"
+      - "/mnt/turp/Turple/Property:/mount/Property"
+      - "/mnt/disk2/Photos:/mount/Photos"
+      - "/mnt/leanne:/mount/Leanne"
+    command: '-s "Family;/mount/Family;yes;no;no;leanne" -s "Property;/mount/Property;yes;no;no;leanne" -s "Photos;/mount/Photos;yes;no;no;leanne"  -s "LeanneWD;/mount/Leanne;yes;no;no;leanne" -u "leanne;FerdinandB00t" -p'
 
 networks:
   turple_network:
