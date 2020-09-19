@@ -1,0 +1,58 @@
+version: "3.2"
+
+services:
+  elastic:
+    image: elasticsearch:7.9.1
+    restart: always
+    environment:
+      - "node.name=es-node"
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+#  logstash:
+#    image: docker.elastic.co/logstash/logstash:6.8.8
+#    restart: always
+    #volumes: 
+    #  - "/mnt/usb_disk1/logstash/config:/usr/share/logstash/config"
+#    environment:
+#      xpack.monitoring.elasticsearch.hosts: http://elastic:9200
+#   ports:
+#      - 5044:5044
+#      - 9600:9600
+#    depends_on: ['elastic']
+  kibana:
+#    image: docker.elastic.co/kibana/kibana:6.8.8
+    image: seeruk/docker-kibana-sense
+    restart: always
+    environment:
+      ELASTICSEARCH_HOSTS: http://elastic:9200
+   ports:
+      - 5601:5601
+    depends_on: ['elastic']
+
+  enterprisesearch:
+    image: docker.elastic.co/enterprise-search/enterprise-search:7.9.1
+    restart: always
+    environment:
+      - "elasticsearch.host=http://elastic:9200"
+      - "allow_es_settings_modification=true"
+      - "JAVA_OPTS=-Xms2g -Xmx2g"
+      - "secret_management.encryption_keys=[4a2cd3f81d39bf28738c10db0ca782095ffac07279561809eecc722e0c20eb09]"
+
+    ports: ['3002:3002']
+    links: ['elastic']
+    depends_on: ['elastic']
+#  sense:
+#    image: s12v/sense
+#    ports: ['5601:5601']
+
+# ssh -N -f -L 3200:172.17.0.1:3200 sturple@turple
+

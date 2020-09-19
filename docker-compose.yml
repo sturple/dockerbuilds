@@ -1,24 +1,6 @@
 version: "3.2"
 
 services:
-
-  revproxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - "${TURP_APP_DATA}/.revproxy/client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf"
-    environment:
-      - DEFAULT_HOST=local.test
-      - VIRTUAL_PROTO=https
-      - VIRTUAL_PORT=443
-    healthcheck:
-      test: ["CMD", "exit", "0"]
-    networks:
-      - turple_network
-
   vscode_shawn:
     image: sturple/coder
     restart: always
@@ -45,23 +27,6 @@ services:
       - "${TURP_DATA_CODE}/code/leanne:/home/coder/project"
     ports:
       - 8082:8080
-  samba:
-    image: dperson/samba
-    restart: unless-stopped
-    environment:
-      TZ: 'Canada/Pacific'
-    ports:
-      - "137:137/udp"
-      - "138:138/udp"
-      - "139:139/tcp"
-      - "445:445/tcp"
-    volumes:
-      - "/mnt/turp/Turple/Family:/mount/Family"
-      - "/mnt/turp/Turple/Property:/mount/Property"
-      - "/mnt/disk2/Photos:/mount/Photos"
-      - "/mnt/leanne:/mount/Leanne"
-    command: '-s "Family;/mount/Family;yes;no;no;leanne" -s "Property;/mount/Property;yes;no;no;leanne" -s "Photos;/mount/Photos;yes;no;no;leanne"  -s "LeanneWD;/mount/Leanne;yes;no;no;leanne" -u "leanne;FerdinandB00t" -p'
-
 networks:
   turple_network:
     driver: bridge
